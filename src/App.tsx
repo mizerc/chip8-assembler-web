@@ -87,6 +87,34 @@ const DisplayPanel = styled.div`
   min-height: 0;
 `;
 
+const CopyButton = styled.button`
+  padding: 10px 32px;
+  color: white;
+  background: #4a4a4a;
+  border: 1px solid #666666;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #5a5a5a;
+    border-color: #777777;
+  }
+
+  &:active:not(:disabled) {
+    background: #3a3a3a;
+  }
+
+  &:disabled {
+    background: #cccccc;
+    border-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
+  }
+`;
+
 const MessageContainer = styled.div`
   margin-top: 12px;
 `;
@@ -104,6 +132,7 @@ function App() {
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [assembledRom, setAssembledRom] = useState<Uint8Array | null>(null);
+  const [copyStatus, setCopyStatus] = useState("");
   const [disassembly, setDisassembly] = useState<DisassemblyLine[] | null>(
     null,
   );
@@ -121,6 +150,7 @@ function App() {
     setErrors([]);
     setSuccess(false);
     setAssembledRom(null);
+    setCopyStatus("");
     setDisassembly(null);
 
     const result = assembler.assemble(code);
@@ -152,6 +182,28 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handleOnCopyRomPress = async () => {
+    if (!assembledRom) return;
+
+    if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+      setCopyStatus("This browser does not support copying binary ROM data.");
+      return;
+    }
+
+    try {
+      const romBlob = new Blob([assembledRom as BlobPart], {
+        type: "application/octet-stream",
+      });
+      await navigator.clipboard.write([
+        new ClipboardItem({ "application/octet-stream": romBlob }),
+      ]);
+      setCopyStatus("ROM data copied.");
+    } catch (error) {
+      console.error("Failed to copy ROM data:", error);
+      setCopyStatus("Failed to copy ROM data. Check clipboard permissions.");
+    }
+  };
+
   return (
     <AppContainer>
       <TopBar>
@@ -175,6 +227,13 @@ function App() {
           >
             Download ROM
           </AssembleButton>
+          <CopyButton
+            onClick={handleOnCopyRomPress}
+            disabled={!assembledRom}
+            title="Copy the same binary ROM bytes as Download ROM"
+          >
+            Copy ROM
+          </CopyButton>
         </ButtonGroup>
       </TopBar>
 
@@ -191,6 +250,7 @@ function App() {
           <RightPanelWrapper>
             <DisplayPanel>
               <MemoryDisplay memory={assembledRom} />
+              {copyStatus && <div role="status">{copyStatus}</div>}
             </DisplayPanel>
             <DisplayPanel>
               <DisassemblyDisplay disassembly={disassembly} />

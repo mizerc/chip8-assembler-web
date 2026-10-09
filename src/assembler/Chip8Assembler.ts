@@ -45,29 +45,35 @@ export class Chip8Assembler {
     // === (2) First Pass ===
     // Execute the First pass: collect labels and process directives
     for (let i = 0; i < lines.length; i++) {
-      // Trim again to remove any leading/trailing whitespace
-      const line = lines[i].trim();
+      try {
+        // Trim again to remove any leading/trailing whitespace
+        const line = lines[i].trim();
 
-      // Skip empty lines and comments
-      if (!line) continue;
+        // Skip empty lines and comments
+        if (!line) continue;
 
-      // Check if the line is a label (label:), directive (.ORG, .BYTE) or instruction
-      // Handle label
-      if (line.endsWith(":")) {
-        const label = line.slice(0, -1);
-        this.labels.set(label, address);
-      }
-      // Handle directives (.ORG, .BYTE)
-      else if (this.isDirective(line)) {
-        // Split line into parts by whitespace and commas
-        const parts = line.split(/[\s,]+/).filter((p) => p.length > 0);
+        // Check if the line is a label (label:), directive (.ORG, .BYTE) or instruction
+        // Handle label
+        if (line.endsWith(":")) {
+          const label = line.slice(0, -1);
+          // If ends with : it is a label
+          // If it is a label, must not start with 0x
+          if (label.startsWith("0x") || line.startsWith("0X")) {
+            throw new Error(`Label must not start with 0x: ${line}`);
+          }
 
-        // Directive is the first part of the line (.ORG)
-        const directive = parts[0].toUpperCase();
+          this.labels.set(label, address);
+        }
+        // Handle directives (.ORG, .BYTE)
+        else if (this.isDirective(line)) {
+          // Split line into parts by whitespace and commas
+          const parts = line.split(/[\s,]+/).filter((p) => p.length > 0);
 
-        // Handle .ORG directive
-        if (directive === ".ORG") {
-          try {
+          // Directive is the first part of the line (.ORG)
+          const directive = parts[0].toUpperCase();
+
+          // Handle .ORG directive
+          if (directive === ".ORG") {
             // Get the address
             const newAddress = this.parseAddress(parts[1]);
 
@@ -80,20 +86,26 @@ export class Chip8Assembler {
 
             // Update assembler state with the new address
             address = newAddress;
-          } catch {
-            // Error will be reported in second pass
+          }
+          // Handle .BYTE directive
+          else if (directive === ".BYTE") {
+            // Each byte takes 1 byte of space
+            address += parts.length - 1;
           }
         }
-        // Handle .BYTE directive
-        else if (directive === ".BYTE") {
-          // Each byte takes 1 byte of space
-          address += parts.length - 1;
+        // Handle instructions by skipping labels and directives
+        else {
+          address += 2; // Each instruction is 2 bytes
         }
+      } catch (error) {
+        errors.push(
+          `1st Pass Error: Line ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
-      // Handle instructions by skipping labels and directives
-      else {
-        address += 2; // Each instruction is 2 bytes
-      }
+    }
+    // If there were any errors during first-pass
+    if (errors.length > 0) {
+      return { success: false, errors };
     }
 
     // === (3) Second Pass ===
@@ -160,12 +172,11 @@ export class Chip8Assembler {
         }
       } catch (error) {
         errors.push(
-          `Line ${lineNumber}: ${error instanceof Error ? error.message : String(error)}`,
+          `2nd Pass Error: Line ${lineNumber}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
-
-    // If there were any errors during assembly, return them
+    // If there were any errors during two-pass
     if (errors.length > 0) {
       return { success: false, errors };
     }
@@ -361,11 +372,13 @@ export class Chip8Assembler {
         return 0xd000 | (xDrw << 8) | (yDrw << 4) | n;
       }
 
+      // SKP = Skip next instruction if key with the value of Vx is pressed
       case "SKP": {
         const xSkp = this.parseRegister(args[0]);
         return 0xe09e | (xSkp << 8);
       }
 
+      // SKNP = Skip next instruction if key with the value of Vx is not pressed
       case "SKNP": {
         const xSknp = this.parseRegister(args[0]);
         return 0xe0a1 | (xSknp << 8);
@@ -576,9 +589,23 @@ export class Chip8Assembler {
    * Parse an address (0-4095)
    */
   private parseAddress(value: string): number {
-    // Check if it's a label
-    if (this.labels.has(value)) {
-      return this.labels.get(value)!;
+    console.log(`Parsing address: ${value}`);
+
+    const valueStartWith0X = value.startsWith("0x") || value.startsWith("0X");
+
+    if (valueStartWith0X) {
+      // Must be a valid hexadecimal number
+      if (!/^0x[0-9a-fA-F]+$/.test(value)) {
+        throw new Error(`Invalid hexadecimal address: ${value}`);
+      }
+    }
+
+    if (!valueStartWith0X) {
+      if (this.labels.has(value)) {
+        return this.labels.get(value)!;
+      } else {
+        throw new Error(`Unknown label: ${value}`);
+      }
     }
 
     const num = this.parseNumber(value);
