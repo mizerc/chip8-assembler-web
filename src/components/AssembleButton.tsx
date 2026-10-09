@@ -4,26 +4,26 @@ const StyledButton = styled.button`
   padding: 10px 32px;
   font-size: 14px;
   font-weight: 600;
-  color: white;
-  background: #4a4a4a;
-  border: 1px solid #666666;
+  color: ${({ theme }) => theme.colors.surface};
+  background: ${({ theme }) => theme.colors.button.background};
+  border: 1px solid ${({ theme }) => theme.colors.button.border};
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 
   &:hover {
-    background: #5a5a5a;
-    border-color: #777777;
+    background: ${({ theme }) => theme.colors.button.hoverBackground};
+    border-color: ${({ theme }) => theme.colors.button.hoverBorder};
   }
 
   &:active {
-    background: #3a3a3a;
+    background: ${({ theme }) => theme.colors.button.activeBackground};
   }
 
   &:disabled {
-    background: #cccccc;
-    border-color: #cccccc;
-    color: #888888;
+    background: ${({ theme }) => theme.colors.button.disabledBackground};
+    border-color: ${({ theme }) => theme.colors.button.disabledBackground};
+    color: ${({ theme }) => theme.colors.button.disabledText};
     cursor: not-allowed;
   }
 `;
@@ -45,4 +45,3 @@ export const AssembleButton: React.FC<AssembleButtonProps> = ({
     </StyledButton>
   );
 };
-

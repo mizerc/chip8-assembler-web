@@ -11,7 +11,7 @@ const AppContainer = styled.div`
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
+  background: ${({ theme }) => theme.colors.appBackground};
 `;
 
 const TopBar = styled.div`
@@ -19,8 +19,8 @@ const TopBar = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
+  background: ${({ theme }) => theme.colors.surface};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   gap: 16px;
 `;
 
@@ -31,14 +31,14 @@ const TitleSection = styled.div`
 
 const Title = styled.h1`
   margin: 0;
-  color: #333;
+  color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 24px;
   font-weight: 700;
 `;
 
 const Subtitle = styled.p`
   margin: 4px 0 0 0;
-  color: #666;
+  color: ${({ theme }) => theme.colors.textSecondary};
   font-size: 14px;
 `;
 
@@ -88,9 +88,9 @@ const DisplayPanel = styled.div`
 
 const CopyButton = styled.button`
   padding: 10px 32px;
-  color: white;
-  background: #4a4a4a;
-  border: 1px solid #666666;
+  color: ${({ theme }) => theme.colors.surface};
+  background: ${({ theme }) => theme.colors.button.background};
+  border: 1px solid ${({ theme }) => theme.colors.button.border};
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -98,18 +98,18 @@ const CopyButton = styled.button`
   white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: #5a5a5a;
-    border-color: #777777;
+    background: ${({ theme }) => theme.colors.button.hoverBackground};
+    border-color: ${({ theme }) => theme.colors.button.hoverBorder};
   }
 
   &:active:not(:disabled) {
-    background: #3a3a3a;
+    background: ${({ theme }) => theme.colors.button.activeBackground};
   }
 
   &:disabled {
-    background: #cccccc;
-    border-color: #cccccc;
-    color: #888888;
+    background: ${({ theme }) => theme.colors.button.disabledBackground};
+    border-color: ${({ theme }) => theme.colors.button.disabledBackground};
+    color: ${({ theme }) => theme.colors.button.disabledText};
     cursor: not-allowed;
   }
 `;
@@ -118,7 +118,6 @@ function App() {
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [assembledRom, setAssembledRom] = useState<Uint8Array | null>(null);
-  const [copyStatus, setCopyStatus] = useState("");
   const [disassembly, setDisassembly] = useState<DisassemblyLine[] | null>(
     null,
   );
@@ -135,7 +134,6 @@ function App() {
   const handleOnAssemblePress = () => {
     setErrors([]);
     setAssembledRom(null);
-    setCopyStatus("");
     setDisassembly(null);
 
     const result = assembler.assemble(code);
@@ -170,7 +168,7 @@ function App() {
     if (!assembledRom) return;
 
     if (!navigator.clipboard?.writeText) {
-      setCopyStatus("This browser does not support copying ROM data.");
+      console.error("This browser does not support copying ROM data.");
       return;
     }
 
@@ -179,10 +177,8 @@ function App() {
         byte.toString(16).toUpperCase().padStart(2, "0"),
       ).join(" ");
       await navigator.clipboard.writeText(hexBytes);
-      setCopyStatus("ROM bytes copied as hexadecimal text.");
     } catch (error) {
       console.error("Failed to copy ROM data:", error);
-      setCopyStatus("Failed to copy ROM data. Check clipboard permissions.");
     }
   };
 
@@ -232,7 +228,6 @@ function App() {
           <RightPanelWrapper>
             <DisplayPanel>
               <MemoryDisplay memory={assembledRom} errors={errors} />
-              {copyStatus && <div role="status">{copyStatus}</div>}
             </DisplayPanel>
             <DisplayPanel>
               <DisassemblyDisplay disassembly={disassembly} />

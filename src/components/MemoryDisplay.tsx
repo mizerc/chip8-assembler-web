@@ -5,23 +5,23 @@ const DisplayContainer = styled.div`
   display: flex;
   width: 100%;
   height: 100%;
-  border: 1px solid #d0d0d0;
+  border: 1px solid ${({ theme }) => theme.colors.editor.border};
   overflow: hidden;
   font-family: 'Courier New', monospace;
   font-size: 14px;
-  background-color: #2b2b2b;
+  background-color: ${({ theme }) => theme.colors.editor.background};
 `;
 
 const LineNumbers = styled.div`
   padding: 12px 8px;
-  background-color: #3a3a3a;
-  color: #888888;
+  background-color: ${({ theme }) => theme.colors.editor.lineNumberBackground};
+  color: ${({ theme }) => theme.colors.editor.lineNumberText};
   text-align: right;
   user-select: none;
   min-width: 50px;
   line-height: 1.5;
   overflow: hidden;
-  border-right: 1px solid #4a4a4a;
+  border-right: 1px solid ${({ theme }) => theme.colors.editor.divider};
 `;
 
 const ContentWrapper = styled.div`
@@ -34,8 +34,9 @@ const ContentDiv = styled.div<{ $hasError: boolean }>`
   width: 100%;
   height: 100%;
   padding: 12px;
-  background-color: #2b2b2b;
-  color: ${({ $hasError }) => ($hasError ? "#ff6b6b" : "#e0e0e0")};
+  background-color: ${({ theme }) => theme.colors.editor.background};
+  color: ${({ theme, $hasError }) =>
+    $hasError ? theme.colors.editor.error : theme.colors.editor.text};
   font-family: 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
@@ -44,12 +45,12 @@ const ContentDiv = styled.div<{ $hasError: boolean }>`
   overflow-x: auto;
 
   &::selection {
-    background-color: #555555;
+    background-color: ${({ theme }) => theme.colors.editor.selection};
   }
 `;
 
 const PlaceholderText = styled.div`
-  color: #666666;
+  color: ${({ theme }) => theme.colors.editor.placeholder};
   font-style: italic;
 `;
 

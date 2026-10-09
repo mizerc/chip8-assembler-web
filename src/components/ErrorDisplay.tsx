@@ -3,9 +3,9 @@ import styled from 'styled-components';
 const ErrorContainer = styled.div`
   margin-top: 12px;
   padding: 12px 16px;
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
+  background-color: ${({ theme }) => theme.colors.error.background};
+  border: 1px solid ${({ theme }) => theme.colors.error.border};
+  color: ${({ theme }) => theme.colors.error.text};
   max-height: 150px;
   overflow-y: auto;
 `;
@@ -46,4 +46,3 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ errors }) => {
     </ErrorContainer>
   );
 };
-
