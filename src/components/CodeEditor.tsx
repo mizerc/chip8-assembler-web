@@ -7,7 +7,7 @@ const EditorContainer = styled.div`
   height: 100%;
   border: 1px solid ${({ theme }) => theme.colors.editor.border};
   overflow: hidden;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   background-color: ${({ theme }) => theme.colors.editor.background};
 `;
@@ -39,7 +39,7 @@ const StyledTextArea = styled.textarea`
   border: none;
   outline: none;
   resize: none;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   line-height: 1.5;
   white-space: pre;
