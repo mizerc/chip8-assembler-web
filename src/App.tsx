@@ -5,7 +5,6 @@ import { MemoryDisplay } from "./components/MemoryDisplay";
 import { DisassemblyDisplay } from "./components/DisassemblyDisplay";
 import type { DisassemblyLine } from "./components/DisassemblyDisplay";
 import { AssembleButton } from "./components/AssembleButton";
-import { ErrorDisplay } from "./components/ErrorDisplay";
 import { Chip8Assembler } from "./assembler/Chip8Assembler";
 
 const AppContainer = styled.div`
@@ -115,22 +114,9 @@ const CopyButton = styled.button`
   }
 `;
 
-const MessageContainer = styled.div`
-  margin-top: 12px;
-`;
-
-const SuccessMessage = styled.div`
-  padding: 12px 16px;
-  background-color: #e6f7e6;
-  border: 1px solid #a3d9a5;
-  color: #2d6e2d;
-  font-weight: 600;
-`;
-
 function App() {
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
-  const [success, setSuccess] = useState(false);
   const [assembledRom, setAssembledRom] = useState<Uint8Array | null>(null);
   const [copyStatus, setCopyStatus] = useState("");
   const [disassembly, setDisassembly] = useState<DisassemblyLine[] | null>(
@@ -148,7 +134,6 @@ function App() {
 
   const handleOnAssemblePress = () => {
     setErrors([]);
-    setSuccess(false);
     setAssembledRom(null);
     setCopyStatus("");
     setDisassembly(null);
@@ -164,7 +149,6 @@ function App() {
     }
     setAssembledRom(result.rom);
     setDisassembly(result.disassembly || null);
-    setSuccess(true);
   };
 
   const handleOnDownloadRomPress = () => {
@@ -249,7 +233,7 @@ function App() {
 
           <RightPanelWrapper>
             <DisplayPanel>
-              <MemoryDisplay memory={assembledRom} />
+              <MemoryDisplay memory={assembledRom} errors={errors} />
               {copyStatus && <div role="status">{copyStatus}</div>}
             </DisplayPanel>
             <DisplayPanel>
@@ -257,17 +241,6 @@ function App() {
             </DisplayPanel>
           </RightPanelWrapper>
         </EditorsContainer>
-
-        <MessageContainer>
-          {success && (
-            <SuccessMessage>
-              ✓ ROM assembled successfully! Click "Download ROM" to save the
-              file.
-            </SuccessMessage>
-          )}
-
-          <ErrorDisplay errors={errors} />
-        </MessageContainer>
       </ContentWrapper>
     </AppContainer>
   );

@@ -30,12 +30,12 @@ const ContentWrapper = styled.div`
   overflow: auto;
 `;
 
-const ContentDiv = styled.div`
+const ContentDiv = styled.div<{ $hasError: boolean }>`
   width: 100%;
   height: 100%;
   padding: 12px;
   background-color: #2b2b2b;
-  color: #e0e0e0;
+  color: ${({ $hasError }) => ($hasError ? "#ff6b6b" : "#e0e0e0")};
   font-family: 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
@@ -55,9 +55,13 @@ const PlaceholderText = styled.div`
 
 interface MemoryDisplayProps {
   memory: Uint8Array | null;
+  errors: string[];
 }
 
-export const MemoryDisplay: React.FC<MemoryDisplayProps> = ({ memory }) => {
+export const MemoryDisplay: React.FC<MemoryDisplayProps> = ({
+  memory,
+  errors,
+}) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const [lineCount, setLineCount] = useState(1);
@@ -99,16 +103,17 @@ export const MemoryDisplay: React.FC<MemoryDisplayProps> = ({ memory }) => {
   const content = memory && memory.length > 0
     ? formatMemoryDump(memory)
     : '';
+  const displayText = errors.length > 0 ? errors.join('\n') : content;
 
   // Update line count when content changes
   useEffect(() => {
-    if (content) {
-      const lines = content.split('\n').length;
+    if (displayText) {
+      const lines = displayText.split('\n').length;
       setLineCount(lines);
     } else {
       setLineCount(1);
     }
-  }, [content]);
+  }, [displayText]);
 
   // Sync scroll between content and line numbers
   const handleScroll = () => {
@@ -128,8 +133,13 @@ export const MemoryDisplay: React.FC<MemoryDisplayProps> = ({ memory }) => {
         ))}
       </LineNumbers>
       <ContentWrapper>
-        <ContentDiv ref={contentRef} onScroll={handleScroll}>
-          {content || (
+        <ContentDiv
+          ref={contentRef}
+          onScroll={handleScroll}
+          $hasError={errors.length > 0}
+          role={errors.length > 0 ? 'alert' : undefined}
+        >
+          {displayText || (
             <PlaceholderText>
               Assembled memory will appear here...
             </PlaceholderText>
@@ -139,4 +149,3 @@ export const MemoryDisplay: React.FC<MemoryDisplayProps> = ({ memory }) => {
     </DisplayContainer>
   );
 };
-
