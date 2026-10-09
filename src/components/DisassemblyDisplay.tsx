@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
-import styled from 'styled-components';
+import { useRef, useEffect, useState } from "react";
+import styled from "styled-components";
 
 const DisplayContainer = styled.div`
   display: flex;
@@ -7,7 +7,7 @@ const DisplayContainer = styled.div`
   height: 100%;
   border: 1px solid #d0d0d0;
   overflow: hidden;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 14px;
   background-color: #2b2b2b;
 `;
@@ -36,7 +36,7 @@ const ContentDiv = styled.div`
   padding: 12px;
   background-color: #2b2b2b;
   color: #e0e0e0;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 14px;
   line-height: 1.5;
   white-space: pre;
@@ -64,7 +64,9 @@ interface DisassemblyDisplayProps {
   disassembly: DisassemblyLine[] | null;
 }
 
-export const DisassemblyDisplay: React.FC<DisassemblyDisplayProps> = ({ disassembly }) => {
+export const DisassemblyDisplay: React.FC<DisassemblyDisplayProps> = ({
+  disassembly,
+}) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const [lineCount, setLineCount] = useState(1);
@@ -72,24 +74,28 @@ export const DisassemblyDisplay: React.FC<DisassemblyDisplayProps> = ({ disassem
   // Format disassembly output
   const formatDisassembly = (lines: DisassemblyLine[]): string => {
     if (lines.length === 0) {
-      return '';
+      return "";
     }
 
-    return lines.map(line => {
-      const addrHex = line.address.toString(16).toUpperCase().padStart(4, '0');
-      const instruction = line.instruction.padEnd(25);
-      return `${addrHex}:  ${line.hexBytes.padEnd(5)}  ${instruction}`;
-    }).join('\n');
+    return lines
+      .map((line) => {
+        const addrHex = line.address
+          .toString(16)
+          .toUpperCase()
+          .padStart(4, "0");
+        const instruction = line.instruction.padEnd(25);
+        return `${addrHex}:  ${line.hexBytes.padEnd(5)}  ${instruction}`;
+      })
+      .join("\n");
   };
 
-  const content = disassembly && disassembly.length > 0
-    ? formatDisassembly(disassembly)
-    : '';
+  const content =
+    disassembly && disassembly.length > 0 ? formatDisassembly(disassembly) : "";
 
   // Update line count when content changes
   useEffect(() => {
     if (content) {
-      const lines = content.split('\n').length;
+      const lines = content.split("\n").length;
       setLineCount(lines);
     } else {
       setLineCount(1);
@@ -109,20 +115,17 @@ export const DisassemblyDisplay: React.FC<DisassemblyDisplayProps> = ({ disassem
   return (
     <DisplayContainer>
       <LineNumbers ref={lineNumbersRef}>
-        {lineNumbers.map(num => (
+        {lineNumbers.map((num) => (
           <div key={num}>{num}</div>
         ))}
       </LineNumbers>
       <ContentWrapper>
         <ContentDiv ref={contentRef} onScroll={handleScroll}>
           {content || (
-            <PlaceholderText>
-              Disassembly will appear here...
-            </PlaceholderText>
+            <PlaceholderText>Disassembly will appear here...</PlaceholderText>
           )}
         </ContentDiv>
       </ContentWrapper>
     </DisplayContainer>
   );
 };
-

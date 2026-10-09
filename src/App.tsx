@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import styled from 'styled-components';
-import { CodeEditor } from './components/CodeEditor';
-import { MemoryDisplay } from './components/MemoryDisplay';
-import { DisassemblyDisplay } from './components/DisassemblyDisplay';
-import type { DisassemblyLine } from './components/DisassemblyDisplay';
-import { AssembleButton } from './components/AssembleButton';
-import { ErrorDisplay } from './components/ErrorDisplay';
-import { Chip8Assembler } from './assembler/Chip8Assembler';
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { CodeEditor } from "./components/CodeEditor";
+import { MemoryDisplay } from "./components/MemoryDisplay";
+import { DisassemblyDisplay } from "./components/DisassemblyDisplay";
+import type { DisassemblyLine } from "./components/DisassemblyDisplay";
+import { AssembleButton } from "./components/AssembleButton";
+import { ErrorDisplay } from "./components/ErrorDisplay";
+import { Chip8Assembler } from "./assembler/Chip8Assembler";
 
 const AppContainer = styled.div`
   height: 100vh;
@@ -99,92 +99,53 @@ const SuccessMessage = styled.div`
   font-weight: 600;
 `;
 
-const SAMPLE_CODE = `; MOVE SPRITE RIGHT OR LEFT
-.ORG 0x200
-
-LD V0, 10        ; X
-LD V1, 15        ; Y
-LD I, sprite     ; sprite ptr
-
-LD V2, 0x1       ; key "1" = LEFT
-LD V3, 0x2       ; key "2" = RIGHT
-LD V4, 0x1       ; amount to subtract or add
-
-; DRAW SPRITE ONCE
-DRW V0, V1, 8
-
-main_loop:
-LD I, sprite
-DRW V0, V1, 8
-
-; IF KEY 1 IS PRESSED, MOVE LEFT
-SKP V2
-JP check_right
-SUB V0, V4 (SUB 1 FROM V0, MOVE LEFT)
-JP draw
-
-check_right:
-; IF KEY 2 IS PRESSED, MOVE RIGHT
-SKP V3
-JP draw
-; ADD 1 TO V0 (MOVE RIGHT)
-ADD V0, V4
-
-draw:
-LD I, sprite
-DRW V0, V1, 8
-JP main_loop
-
-sprite:
-.byte 0b11111111  ; ████████
-.byte 0b10000001  ; █      █
-.byte 0b10111101  ; █ ████ █
-.byte 0b10100101  ; █ █  █ █
-.byte 0b10100101  ; █ █  █ █
-.byte 0b10111101  ; █ ████ █
-.byte 0b10000001  ; █      █
-.byte 0b11111111  ; ████████
-`;
-
 function App() {
-  const [code, setCode] = useState(SAMPLE_CODE);
+  const [code, setCode] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [assembledRom, setAssembledRom] = useState<Uint8Array | null>(null);
-  const [disassembly, setDisassembly] = useState<DisassemblyLine[] | null>(null);
+  const [disassembly, setDisassembly] = useState<DisassemblyLine[] | null>(
+    null,
+  );
   const assembler = new Chip8Assembler();
 
-  const handleAssemble = () => {
+  // Load initial assembler code from resources/test.asm at initialization
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}resources/test.asm`)
+      .then((response) => response.text())
+      .then((text) => setCode(text))
+      .catch((error) => console.error("Failed to load initial code:", error));
+  }, []);
+
+  const handleOnAssemblePress = () => {
     setErrors([]);
     setSuccess(false);
     setAssembledRom(null);
     setDisassembly(null);
 
     const result = assembler.assemble(code);
-
     if (!result.success) {
-      setErrors(result.errors || ['Unknown error occurred']);
+      setErrors(result.errors || ["Unknown error occurred"]);
       return;
     }
-
     if (!result.rom) {
-      setErrors(['Failed to generate ROM']);
+      setErrors(["Failed to generate ROM"]);
       return;
     }
-
     setAssembledRom(result.rom);
     setDisassembly(result.disassembly || null);
     setSuccess(true);
   };
 
-  const handleDownload = () => {
+  const handleOnDownloadRomPress = () => {
     if (!assembledRom) return;
-
-    const blob = new Blob([assembledRom as BlobPart], { type: 'application/octet-stream' });
+    const blob = new Blob([assembledRom as BlobPart], {
+      type: "application/octet-stream",
+    });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = 'chip8-program.ch8';
+    link.download = "chip8-program-rom.ch8";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -196,17 +157,20 @@ function App() {
       <TopBar>
         <TitleSection>
           <Title>CHIP-8 Assembler</Title>
-          <Subtitle>Write your CHIP-8 assembly code and assemble it into a ROM file using the two-pass assembler.</Subtitle>
+          <Subtitle>
+            Write your CHIP-8 assembly code and assemble it into a ROM file
+            using the two-pass assembler.
+          </Subtitle>
         </TitleSection>
         <ButtonGroup>
           <AssembleButton
-            onClick={handleAssemble}
+            onClick={handleOnAssemblePress}
             disabled={!code.trim()}
           >
             Assemble
           </AssembleButton>
           <AssembleButton
-            onClick={handleDownload}
+            onClick={handleOnDownloadRomPress}
             disabled={!assembledRom}
           >
             Download ROM
@@ -237,7 +201,8 @@ function App() {
         <MessageContainer>
           {success && (
             <SuccessMessage>
-              ✓ ROM assembled successfully! Click "Download ROM" to save the file.
+              ✓ ROM assembled successfully! Click "Download ROM" to save the
+              file.
             </SuccessMessage>
           )}
 
