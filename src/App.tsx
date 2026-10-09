@@ -169,19 +169,17 @@ function App() {
   const handleOnCopyRomPress = async () => {
     if (!assembledRom) return;
 
-    if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
-      setCopyStatus("This browser does not support copying binary ROM data.");
+    if (!navigator.clipboard?.writeText) {
+      setCopyStatus("This browser does not support copying ROM data.");
       return;
     }
 
     try {
-      const romBlob = new Blob([assembledRom as BlobPart], {
-        type: "application/octet-stream",
-      });
-      await navigator.clipboard.write([
-        new ClipboardItem({ "application/octet-stream": romBlob }),
-      ]);
-      setCopyStatus("ROM data copied.");
+      const hexBytes = Array.from(assembledRom, (byte) =>
+        byte.toString(16).toUpperCase().padStart(2, "0"),
+      ).join(" ");
+      await navigator.clipboard.writeText(hexBytes);
+      setCopyStatus("ROM bytes copied as hexadecimal text.");
     } catch (error) {
       console.error("Failed to copy ROM data:", error);
       setCopyStatus("Failed to copy ROM data. Check clipboard permissions.");
@@ -214,7 +212,7 @@ function App() {
           <CopyButton
             onClick={handleOnCopyRomPress}
             disabled={!assembledRom}
-            title="Copy the same binary ROM bytes as Download ROM"
+            title="Copy ROM bytes as space-separated hexadecimal text"
           >
             Copy ROM
           </CopyButton>
